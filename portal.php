@@ -54,6 +54,18 @@
             margin-top: 8px;
         }
 
+        .error-message {
+            display: none;
+            background: #FF6200;
+            color: #FFFFFF;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .user-type-selector {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -167,39 +179,6 @@
             color: #FF6200;
             text-decoration: underline;
         }
-
-        .host-type-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .host-type-btn {
-            padding: 10px 16px;
-            border: 2px solid #FFC107;
-            background: #FFFFFF;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1A1A1A;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .host-type-btn:hover {
-            background: #FFC107;
-            color: #1A1A1A;
-            transform: scale(1.05);
-        }
-
-        .host-type-btn.active {
-            background: #FFC107;
-            color: #1A1A1A;
-            border-color: #FF6200;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-        }
     </style>
 </head>
 
@@ -208,14 +187,16 @@
         <div class="login-card">
             <div class="login-header">
                 <h1>TAMINO ETV</h1>
-                <p>Access your account</p>
+                <p>Access or create your account</p>
             </div>
+
+            <div class="error-message" id="errorMessage"></div>
 
             <!-- User Type Selection -->
             <div class="user-type-selector">
-                <button class="user-type-btn active" data-type="staff">Staff</button>
+                <button class="user-type-btn active" data-type="staff">Staff Login</button>
+                <button class="user-type-btn" data-type="staff-signup">Staff Signup</button>
                 <button class="user-type-btn" data-type="admin">Admin</button>
-                <button class="user-type-btn" data-type="guest">Guest</button>
                 <button class="user-type-btn" data-type="host">Host</button>
             </div>
 
@@ -234,6 +215,25 @@
                 </form>
             </div>
 
+            <!-- Staff Signup Form -->
+            <div class="form-section" id="staff-signupForm">
+                <form>
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" class="login-btn">Sign Up as Staff</button>
+                </form>
+            </div>
+
             <!-- Admin Login Form -->
             <div class="form-section" id="adminForm">
                 <form>
@@ -249,27 +249,11 @@
                 </form>
             </div>
 
-            <!-- Guest Login Form -->
-            <div class="form-section" id="guestForm">
-                <form>
-                    <div class="form-group">
-                        <label for="sessionCode">Session Code</label>
-                        <input type="text" id="sessionCode" placeholder="Enter session code" required>
-                    </div>
-                    <button type="submit" class="login-btn">Join as Guest</button>
-                </form>
-            </div>
-
             <!-- Host Login Form -->
             <div class="form-section" id="hostForm">
-                <div class="host-type-selector">
-                    <button type="button" class="host-type-btn active" data-host-type="podcast">Podcast</button>
-                    <button type="button" class="host-type-btn" data-host-type="film">Film</button>
-                </div>
-
                 <form>
                     <div class="form-group">
-                        <label for="hostId" id="hostIdLabel">Podcast ID</label>
+                        <label for="hostId">Podcast ID</label>
                         <input type="text" id="hostId" placeholder="Enter podcast ID" required>
                     </div>
                     <div class="form-group">
