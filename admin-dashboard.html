@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Tamino ETV</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-dashboard {
+            min-height: 100vh;
+            background: #1a1a1a;
+            padding-top: 64px;
+        }
+
+        .dashboard-header {
+            background: #2d2d2d;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            border-left: 4px solid #dc2626;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .management-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #333;
+            border-left: 4px solid #dc2626;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: #dc2626;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .management-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #9ca3af;
+            border: 1px solid #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            color: white;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .user-table th {
+            background: #1a1a1a;
+            font-weight: 600;
+            color: #dc2626;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-inactive {
+            background: #6b7280;
+            color: white;
+        }
+
+        .system-alerts {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #333;
+            border-left: 4px solid #f59e0b;
+            margin-bottom: 24px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f59e0b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-content">
+                    <div class="nav-logo">
+                        <h1>TAMINO ETV</h1>
+                    </div>
+                    <div class="nav-menu">
+                        <a href="index.html" class="nav-link">Home</a>
+                        <a href="admin-dashboard.html" class="nav-link active">Admin</a>
+                        <a href="#" class="nav-link">Analytics</a>
+                        <a href="#" class="nav-link">Settings</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-nav">
+                    <div>
+                        <h2>Admin Control Panel</h2>
+                        <p style="color: #9ca3af; margin: 0;">Manage all system operations and users</p>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <div class="user-details">
+                            <h3>Administrator</h3>
+                            <div style="font-size: 12px; color: #9ca3af;">Full Access</div>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="container" style="padding: 40px 20px;">
+            <!-- System Alerts -->
+            <div class="system-alerts">
+                <h3 style="color: #f59e0b; margin-bottom: 16px;">System Alerts</h3>
+                <div class="alert-item">
+                    <div class="alert-icon">⚠️</div>
+                    <div>
+                        <div style="font-weight: 500;">Server maintenance scheduled</div>
+                        <div style="font-size: 12px; color: #9ca3af;">Tomorrow at 2:00 AM - 4:00 AM</div>
+                    </div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-icon">📊</div>
+                    <div>
+                        <div style="font-weight: 500;">Storage usage at 85%</div>
+                        <div style="font-size: 12px; color: #9ca3af;">Consider upgrading storage plan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Grid -->
+            <div class="management-grid">
+                <!-- User Management -->
+                <div class="management-card">
+                    <div class="card-header">
+                        <h3 class="card-title">User Management</h3>
+                        <div class="card-icon">👥</div>
+                    </div>
+                    <div class="stats-overview">
+                        <div class="stat-box">
+                            <div class="stat-number">24</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">18</div>
+                            <div class="stat-label">Active</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">6</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                    </div>
+                    <div class="management-actions">
+                        <button class="action-btn btn-primary">Add User</button>
+                        <button class="action-btn btn-secondary">Bulk Actions</button>
+                        <button class="action-btn btn-secondary">Export List</button>
+                    </div>
+                </div>
+
+                <!-- Content Management -->
+                <div class="management-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Content Library</h3>
+                        <div class="card-icon">🎬</div>
+                    </div>
+                    <div class="stats-overview">
+                        <div class="stat-box">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Films</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">15</div>
+                            <div class="stat-label">Podcasts</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">32</div>
+                            <div class="stat-label">Episodes</div>
+                        </div>
+                    </div>
+                    <div class="management-actions">
+                        <button class="action-btn btn-primary">Add Content</button>
+                        <button class="action-btn btn-secondary">Moderate</button>
+                        <button class="action-btn btn-secondary">Archive</button>
+                    </div>
+                </div>
+
+                <!-- Studio Management -->
+                <div class="management-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Studio Operations</h3>
+                        <div class="card-icon">🏢</div>
+                    </div>
+                    <div class="stats-overview">
+                        <div class="stat-box">
+                            <div class="stat-number">3</div>
+                            <div class="stat-label">Studios</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Bookings</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">85%</div>
+                            <div class="stat-label">Utilization</div>
+                        </div>
+                    </div>
+                    <div class="management-actions">
+                        <button class="action-btn btn-primary">Manage Schedule</button>
+                        <button class="action-btn btn-secondary">Equipment</button>
+                        <button class="action-btn btn-secondary">Maintenance</button>
+                    </div>
+                </div>
+
+                <!-- Academy Management -->
+                <div class="management-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Academy System</h3>
+                        <div class="card-icon">🎓</div>
+                    </div>
+                    <div class="stats-overview">
+                        <div class="stat-box">
+                            <div class="stat-number">45</div>
+                            <div class="stat-label">Students</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">6</div>
+                            <div class="stat-label">Courses</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Instructors</div>
+                        </div>
+                    </div>
+                    <div class="management-actions">
+                        <button class="action-btn btn-primary">Manage Courses</button>
+                        <button class="action-btn btn-secondary">Enrollments</button>
+                        <button class="action-btn btn-secondary">Certificates</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Users Table -->
+            <div class="management-card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent User Activity</h3>
+                    <button class="action-btn btn-secondary">View All</button>
+                </div>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Last Active</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Smith</td>
+                            <td>Host</td>
+                            <td>2 hours ago</td>
+                            <td><span class="status-badge status-active">Active</span></td>
+                            <td><button class="action-btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>Staff</td>
+                            <td>5 hours ago</td>
+                            <td><span class="status-badge status-active">Active</span></td>
+                            <td><button class="action-btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+                        </tr>
+                        <tr>
+                            <td>Mike Wilson</td>
+                            <td>Guest</td>
+                            <td>1 day ago</td>
+                            <td><span class="status-badge status-inactive">Inactive</span></td>
+                            <td><button class="action-btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        function addUser() {
+            alert('Add User functionality would open a modal here');
+        }
+
+        function manageContent() {
+            alert('Content management panel would open here');
+        }
+
+        // Initialize admin dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[v0] Admin dashboard loaded');
+        });
+    </script>
+</body>
+</html>

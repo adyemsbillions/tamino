@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Tamino ETV</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            background: #1a1a1a;
+            padding-top: 64px;
+        }
+
+        .dashboard-header {
+            background: #2d2d2d;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+
+        .dashboard-content {
+            padding: 40px 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #333;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .icon-cyan {
+            background: #06b6d4;
+            color: #1a1a1a;
+        }
+
+        .icon-pink {
+            background: #ec4899;
+            color: white;
+        }
+
+        .icon-green {
+            background: #10b981;
+            color: white;
+        }
+
+        .icon-orange {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .card-content {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #06b6d4;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-small {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .btn-primary-small:hover {
+            background: #0891b2;
+        }
+
+        .btn-secondary-small {
+            background: transparent;
+            color: #9ca3af;
+            border: 1px solid #4b5563;
+        }
+
+        .btn-secondary-small:hover {
+            background: #4b5563;
+            color: white;
+        }
+
+        .recent-activity {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #333;
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .quick-action {
+            background: #2d2d2d;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-action:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .quick-action-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Role-specific styles */
+        .role-admin .dashboard-card {
+            border-left: 4px solid #dc2626;
+        }
+
+        .role-staff .dashboard-card {
+            border-left: 4px solid #06b6d4;
+        }
+
+        .role-host .dashboard-card {
+            border-left: 4px solid #ec4899;
+        }
+
+        .role-guest .dashboard-card {
+            border-left: 4px solid #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-nav {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-content">
+                    <div class="nav-logo">
+                        <h1>TAMINO ETV</h1>
+                    </div>
+                    <div class="nav-menu">
+                        <a href="index.html" class="nav-link">Home</a>
+                        <a href="#" class="nav-link">Projects</a>
+                        <a href="#" class="nav-link">Calendar</a>
+                        <a href="#" class="nav-link">Settings</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-nav">
+                    <div>
+                        <h2 id="dashboardTitle">Dashboard</h2>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <h3 id="userName">Admin User</h3>
+                            <div class="user-role" id="userRole">Administrator</div>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <div class="container">
+                <!-- Admin Dashboard -->
+                <div id="adminDashboard" class="role-admin">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">System Overview</h3>
+                                <div class="card-icon icon-cyan">📊</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Monitor all system activities and user management</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">24</div>
+                                        <div class="stat-label">Active Users</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">12</div>
+                                        <div class="stat-label">Projects</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">Manage Users</button>
+                                    <button class="action-btn btn-secondary-small">View Reports</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Content Management</h3>
+                                <div class="card-icon icon-pink">🎬</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Manage films, podcasts, and studio bookings</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">8</div>
+                                        <div class="stat-label">Films</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">15</div>
+                                        <div class="stat-label">Podcasts</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">Add Content</button>
+                                    <button class="action-btn btn-secondary-small">Schedule</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Academy Management</h3>
+                                <div class="card-icon icon-green">🎓</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Oversee courses, students, and instructors</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">45</div>
+                                        <div class="stat-label">Students</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">6</div>
+                                        <div class="stat-label">Courses</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">Manage Courses</button>
+                                    <button class="action-btn btn-secondary-small">View Students</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Dashboard -->
+                <div id="staffDashboard" class="role-staff" style="display: none;">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">My Tasks</h3>
+                                <div class="card-icon icon-cyan">✅</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Your assigned tasks and deadlines</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">5</div>
+                                        <div class="stat-label">Pending</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">12</div>
+                                        <div class="stat-label">Completed</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">View Tasks</button>
+                                    <button class="action-btn btn-secondary-small">Add Task</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Project Status</h3>
+                                <div class="card-icon icon-pink">📋</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Current projects and progress</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">3</div>
+                                        <div class="stat-label">Active</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">7</div>
+                                        <div class="stat-label">Completed</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">View Projects</button>
+                                    <button class="action-btn btn-secondary-small">Update Status</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Host Dashboard -->
+                <div id="hostDashboard" class="role-host" style="display: none;">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title" id="hostContentTitle">My Podcasts</h3>
+                                <div class="card-icon icon-pink">🎙️</div>
+                            </div>
+                            <div class="card-content">
+                                <p id="hostContentDesc">Manage your podcast episodes and schedule</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">8</div>
+                                        <div class="stat-label">Episodes</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">1.2k</div>
+                                        <div class="stat-label">Listeners</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">New Episode</button>
+                                    <button class="action-btn btn-secondary-small">Analytics</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Studio Booking</h3>
+                                <div class="card-icon icon-green">🏢</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Book studio time for recording sessions</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">3</div>
+                                        <div class="stat-label">Upcoming</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">15</div>
+                                        <div class="stat-label">Hours Used</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">Book Studio</button>
+                                    <button class="action-btn btn-secondary-small">View Schedule</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guest Dashboard -->
+                <div id="guestDashboard" class="role-guest" style="display: none;">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Session Access</h3>
+                                <div class="card-icon icon-green">🎯</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Access your assigned session content</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-number">1</div>
+                                        <div class="stat-label">Active Session</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">45m</div>
+                                        <div class="stat-label">Remaining</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">Join Session</button>
+                                    <button class="action-btn btn-secondary-small">Download Files</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Resources</h3>
+                                <div class="card-icon icon-orange">📚</div>
+                            </div>
+                            <div class="card-content">
+                                <p>Access shared resources and materials</p>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-primary-small">View Resources</button>
+                                    <button class="action-btn btn-secondary-small">Contact Host</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h3 class="card-title">Recent Activity</h3>
+                    <ul class="activity-list" id="activityList">
+                        <li class="activity-item">
+                            <div class="activity-icon icon-cyan">📝</div>
+                            <div class="activity-content">
+                                <div class="activity-title">New project created</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon icon-pink">🎙️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Podcast episode uploaded</div>
+                                <div class="activity-time">5 hours ago</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon icon-green">👥</div>
+                            <div class="activity-content">
+                                <div class="activity-title">New user registered</div>
+                                <div class="activity-time">1 day ago</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <a href="#" class="quick-action">
+                        <div class="quick-action-icon">📊</div>
+                        <div class="quick-action-label">Analytics</div>
+                    </a>
+                    <a href="#" class="quick-action">
+                        <div class="quick-action-icon">⚙️</div>
+                        <div class="quick-action-label">Settings</div>
+                    </a>
+                    <a href="#" class="quick-action">
+                        <div class="quick-action-icon">📞</div>
+                        <div class="quick-action-label">Support</div>
+                    </a>
+                    <a href="#" class="quick-action">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-label">Reports</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate user data (in real app, this would come from authentication)
+        let currentUser = {
+            type: 'admin',
+            name: 'Admin User',
+            email: 'admin@taminoetv.com',
+            hostType: null
+        };
+
+        // Initialize dashboard based on URL parameters or localStorage
+        function initializeDashboard() {
+            // Check URL parameters for user type (simulating login redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const userType = urlParams.get('type') || localStorage.getItem('userType') || 'admin';
+            const hostType = urlParams.get('hostType') || localStorage.getItem('hostType');
+            
+            currentUser.type = userType;
+            currentUser.hostType = hostType;
+            
+            // Update user info based on type
+            updateUserInfo();
+            
+            // Show appropriate dashboard
+            showDashboard(userType);
+            
+            console.log('[v0] Dashboard initialized for user type:', userType);
+        }
+
+        function updateUserInfo() {
+            const userName = document.getElementById('userName');
+            const userRole = document.getElementById('userRole');
+            const userAvatar = document.getElementById('userAvatar');
+            const dashboardTitle = document.getElementById('dashboardTitle');
+            
+            switch(currentUser.type) {
+                case 'admin':
+                    userName.textContent = 'Admin User';
+                    userRole.textContent = 'Administrator';
+                    userAvatar.textContent = 'A';
+                    dashboardTitle.textContent = 'Admin Dashboard';
+                    break;
+                case 'staff':
+                    userName.textContent = 'Staff Member';
+                    userRole.textContent = 'Staff';
+                    userAvatar.textContent = 'S';
+                    dashboardTitle.textContent = 'Staff Dashboard';
+                    break;
+                case 'host':
+                    const hostTypeText = currentUser.hostType === 'film' ? 'Film Host' : 'Podcast Host';
+                    userName.textContent = hostTypeText;
+                    userRole.textContent = 'Host';
+                    userAvatar.textContent = 'H';
+                    dashboardTitle.textContent = 'Host Dashboard';
+                    
+                    // Update host-specific content
+                    if (currentUser.hostType === 'film') {
+                        document.getElementById('hostContentTitle').textContent = 'My Films';
+                        document.getElementById('hostContentDesc').textContent = 'Manage your film projects and production';
+                        document.querySelector('#hostDashboard .card-icon').textContent = '🎬';
+                    }
+                    break;
+                case 'guest':
+                    userName.textContent = 'Guest User';
+                    userRole.textContent = 'Guest';
+                    userAvatar.textContent = 'G';
+                    dashboardTitle.textContent = 'Guest Dashboard';
+                    break;
+            }
+        }
+
+        function showDashboard(userType) {
+            // Hide all dashboards
+            document.getElementById('adminDashboard').style.display = 'none';
+            document.getElementById('staffDashboard').style.display = 'none';
+            document.getElementById('hostDashboard').style.display = 'none';
+            document.getElementById('guestDashboard').style.display = 'none';
+            
+            // Show selected dashboard
+            document.getElementById(userType + 'Dashboard').style.display = 'block';
+            
+            // Update activity based on user type
+            updateActivityFeed(userType);
+        }
+
+        function updateActivityFeed(userType) {
+            const activityList = document.getElementById('activityList');
+            let activities = [];
+            
+            switch(userType) {
+                case 'admin':
+                    activities = [
+                        { icon: '👥', title: 'New user registered', time: '2 hours ago' },
+                        { icon: '📊', title: 'System backup completed', time: '5 hours ago' },
+                        { icon: '⚙️', title: 'Settings updated', time: '1 day ago' }
+                    ];
+                    break;
+                case 'staff':
+                    activities = [
+                        { icon: '✅', title: 'Task completed: Video editing', time: '1 hour ago' },
+                        { icon: '📋', title: 'Project status updated', time: '3 hours ago' },
+                        { icon: '📝', title: 'Report submitted', time: '6 hours ago' }
+                    ];
+                    break;
+                case 'host':
+                    const contentType = currentUser.hostType === 'film' ? 'film scene' : 'podcast episode';
+                    activities = [
+                        { icon: '🎙️', title: `New ${contentType} recorded`, time: '30 minutes ago' },
+                        { icon: '📅', title: 'Studio session scheduled', time: '2 hours ago' },
+                        { icon: '📊', title: 'Analytics report generated', time: '4 hours ago' }
+                    ];
+                    break;
+                case 'guest':
+                    activities = [
+                        { icon: '🎯', title: 'Joined session', time: '15 minutes ago' },
+                        { icon: '📥', title: 'Downloaded resources', time: '1 hour ago' },
+                        { icon: '💬', title: 'Message from host', time: '2 hours ago' }
+                    ];
+                    break;
+            }
+            
+            activityList.innerHTML = activities.map(activity => `
+                <li class="activity-item">
+                    <div class="activity-icon icon-cyan">${activity.icon}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function logout() {
+            localStorage.removeItem('userType');
+            localStorage.removeItem('hostType');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

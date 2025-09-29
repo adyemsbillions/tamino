@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Dashboard - Tamino ETV</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .host-dashboard {
+            min-height: 100vh;
+            background: #1a1a1a;
+            padding-top: 64px;
+        }
+
+        .dashboard-header {
+            background: #2d2d2d;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            border-left: 4px solid #ec4899;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .content-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #333;
+            border-left: 4px solid #ec4899;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .project-item {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #333;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .project-title {
+            font-weight: 600;
+            color: #ec4899;
+        }
+
+        .project-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-recording {
+            background: #dc2626;
+            color: white;
+        }
+
+        .status-editing {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-published {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-scheduled {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .analytics-item {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .analytics-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ec4899;
+            margin-bottom: 4px;
+        }
+
+        .analytics-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: #ec4899;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #be185d;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #9ca3af;
+            border: 1px solid #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            color: white;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .schedule-time {
+            background: #ec4899;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-right: 16px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+
+        .guest-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .guest-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .guest-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="host-dashboard">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-content">
+                    <div class="nav-logo">
+                        <h1>TAMINO ETV</h1>
+                    </div>
+                    <div class="nav-menu">
+                        <a href="index.html" class="nav-link">Home</a>
+                        <a href="host-dashboard.html" class="nav-link active">Dashboard</a>
+                        <a href="#" class="nav-link">Analytics</a>
+                        <a href="#" class="nav-link">Studio</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 id="hostTitle">Podcast Host Dashboard</h2>
+                        <p style="color: #9ca3af; margin: 0;" id="hostSubtitle">Manage your podcast content and sessions</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div class="user-avatar">H</div>
+                        <div>
+                            <h3 style="margin: 0;" id="hostName">Podcast Host</h3>
+                            <div style="font-size: 12px; color: #9ca3af;">Content Creator</div>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="container" style="padding: 40px 20px;">
+            <!-- Content Overview -->
+            <div class="content-grid">
+                <!-- My Content -->
+                <div class="content-card">
+                    <h3 style="color: #ec4899; margin-bottom: 20px;" id="contentTitle">📻 My Podcasts</h3>
+                    
+                    <div class="analytics-grid">
+                        <div class="analytics-item">
+                            <div class="analytics-number">12</div>
+                            <div class="analytics-label">Episodes</div>
+                        </div>
+                        <div class="analytics-item">
+                            <div class="analytics-number">2.4k</div>
+                            <div class="analytics-label">Listeners</div>
+                        </div>
+                        <div class="analytics-item">
+                            <div class="analytics-number">4.8</div>
+                            <div class="analytics-label">Rating</div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <button class="action-btn btn-primary" onclick="newContent()">+ New Episode</button>
+                        <button class="action-btn btn-secondary" onclick="manageContent()">Manage All</button>
+                    </div>
+                </div>
+
+                <!-- Recent Projects -->
+                <div class="content-card">
+                    <h3 style="color: #ec4899; margin-bottom: 20px;">📋 Recent Projects</h3>
+                    
+                    <div class="project-item">
+                        <div class="project-header">
+                            <div class="project-title">Tech Talk Episode 15</div>
+                            <div class="project-status status-recording">Recording</div>
+                        </div>
+                        <div style="font-size: 12px; color: #9ca3af;">Guest: Sarah Johnson • Today 3:00 PM</div>
+                    </div>
+
+                    <div class="project-item">
+                        <div class="project-header">
+                            <div class="project-title">Startup Stories #8</div>
+                            <div class="project-status status-editing">Editing</div>
+                        </div>
+                        <div style="font-size: 12px; color: #9ca3af;">Interview with CEO • Yesterday</div>
+                    </div>
+
+                    <div class="project-item">
+                        <div class="project-header">
+                            <div class="project-title">Weekly Roundup</div>
+                            <div class="project-status status-published">Published</div>
+                        </div>
+                        <div style="font-size: 12px; color: #9ca3af;">News summary • 2 days ago</div>
+                    </div>
+
+                    <button class="action-btn btn-secondary" onclick="viewAllProjects()">View All Projects</button>
+                </div>
+
+                <!-- Studio Schedule -->
+                <div class="content-card">
+                    <h3 style="color: #ec4899; margin-bottom: 20px;">🏢 Studio Schedule</h3>
+                    
+                    <div class="schedule-item">
+                        <div class="schedule-time">2:00 PM</div>
+                        <div>
+                            <div style="font-weight: 500;">Recording Session</div>
+                            <div style="font-size: 12px; color: #9ca3af;">Studio A • Tech Talk Episode</div>
+                        </div>
+                    </div>
+
+                    <div class="schedule-item">
+                        <div class="schedule-time">4:30 PM</div>
+                        <div>
+                            <div style="font-weight: 500;">Post-Production</div>
+                            <div style="font-size: 12px; color: #9ca3af;">Studio B • Editing Suite</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <button class="action-btn btn-primary" onclick="bookStudio()">Book Studio</button>
+                        <button class="action-btn btn-secondary" onclick="viewSchedule()">Full Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Guest Management -->
+                <div class="content-card">
+                    <h3 style="color: #ec4899; margin-bottom: 20px;">👥 Guest Management</h3>
+                    
+                    <div class="guest-list">
+                        <div class="guest-item">
+                            <div>
+                                <div style="font-weight: 500;">Sarah Johnson</div>
+                                <div style="font-size: 12px; color: #9ca3af;">Session: TTV-2024-001</div>
+                            </div>
+                            <div style="color: #10b981; font-size: 12px;">Active</div>
+                        </div>
+
+                        <div class="guest-item">
+                            <div>
+                                <div style="font-weight: 500;">Mike Chen</div>
+                                <div style="font-size: 12px; color: #9ca3af;">Session: TTV-2024-002</div>
+                            </div>
+                            <div style="color: #f59e0b; font-size: 12px;">Scheduled</div>
+                        </div>
+
+                        <div class="guest-item">
+                            <div>
+                                <div style="font-weight: 500;">Lisa Park</div>
+                                <div style="font-size: 12px; color: #9ca3af;">Session: TTV-2024-003</div>
+                            </div>
+                            <div style="color: #06b6d4; font-size: 12px;">Invited</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <button class="action-btn btn-primary" onclick="inviteGuest()">Invite Guest</button>
+                        <button class="action-btn btn-secondary" onclick="manageGuests()">Manage All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+                <button class="action-btn btn-primary" onclick="startRecording()">
+                    🎙️ Start Recording
+                </button>
+                <button class="action-btn btn-secondary" onclick="uploadContent()">
+                    📤 Upload Content
+                </button>
+                <button class="action-btn btn-secondary" onclick="viewAnalytics()">
+                    📊 View Analytics
+                </button>
+                <button class="action-btn btn-secondary" onclick="settings()">
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initializeHostDashboard() {
+            const hostType = localStorage.getItem('hostType') || 'podcast';
+            
+            if (hostType === 'film') {
+                document.getElementById('hostTitle').textContent = 'Film Host Dashboard';
+                document.getElementById('hostSubtitle').textContent = 'Manage your film projects and productions';
+                document.getElementById('hostName').textContent = 'Film Host';
+                document.getElementById('contentTitle').innerHTML = '🎬 My Films';
+            }
+        }
+
+        function newContent() {
+            const hostType = localStorage.getItem('hostType') || 'podcast';
+            const contentType = hostType === 'film' ? 'film project' : 'podcast episode';
+            alert(`Creating new ${contentType}...`);
+        }
+
+        function manageContent() {
+            alert('Opening content management panel...');
+        }
+
+        function bookStudio() {
+            alert('Opening studio booking system...');
+        }
+
+        function inviteGuest() {
+            alert('Opening guest invitation form...');
+        }
+
+        function startRecording() {
+            alert('Starting recording session...');
+        }
+
+        function uploadContent() {
+            alert('Opening upload interface...');
+        }
+
+        function viewAnalytics() {
+            alert('Opening analytics dashboard...');
+        }
+
+        function viewAllProjects() {
+            alert('Showing all projects...');
+        }
+
+        function viewSchedule() {
+            alert('Opening full schedule view...');
+        }
+
+        function manageGuests() {
+            alert('Opening guest management panel...');
+        }
+
+        function settings() {
+            alert('Opening settings panel...');
+        }
+
+        function logout() {
+            localStorage.removeItem('userType');
+            localStorage.removeItem('hostType');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize host dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[v0] Host dashboard loaded');
+            initializeHostDashboard();
+        });
+    </script>
+</body>
+</html>
