@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -54,10 +57,12 @@
             margin-top: 8px;
         }
 
-        .error-message {
-            display: <?php echo isset($_GET['error']) ? 'block' : 'none';
+        .error-message,
+        .success-message {
+            display: <?php echo isset($_GET['error']) ? 'block' : (isset($_GET['success']) ? 'block' : 'none');
                         ?>;
-            background: #FF6200;
+            background: <?php echo isset($_GET['error']) ? '#FF6200' : '#FFC107';
+                        ?>;
             color: #FFFFFF;
             padding: 10px;
             border-radius: 8px;
@@ -150,6 +155,8 @@
 
             <div class="error-message"><?php echo isset($_GET['error']) ? htmlspecialchars($_GET['error']) : ''; ?>
             </div>
+            <div class="success-message">
+                <?php echo isset($_GET['success']) ? htmlspecialchars($_GET['success']) : ''; ?></div>
 
             <form action="login.php" method="POST">
                 <input type="hidden" name="userType" value="host">
@@ -157,7 +164,7 @@
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
                     <label for="hostId">Podcast ID</label>
-                    <input type="text" id="hostId" name="hostId" placeholder="Enter podcast ID" required>
+                    <input type="text" id="hostId" name="host_id" placeholder="Enter podcast ID" required>
                 </div>
                 <div class="form-group">
                     <label for="hostPasscode">Passcode</label>
@@ -168,7 +175,7 @@
             </form>
 
             <div class="back-link">
-                <a href="index.html">← Back to Home</a>
+                <a href="index.php">← Back to Home</a>
             </div>
         </div>
     </div>

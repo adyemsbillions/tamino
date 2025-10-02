@@ -38,8 +38,29 @@ $result = $stmt->get_result();
 $contacts_list = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Generate CSRF token
-$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Fetch podcasts list
+$stmt = $conn->prepare("SELECT p.id, p.name, p.description, p.status, h.name AS host_name FROM podcasts p INNER JOIN hosts h ON p.host_id = h.id ORDER BY p.created_at DESC");
+$stmt->execute();
+$result = $stmt->get_result();
+$podcasts_list = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Fetch tasks list
+$stmt = $conn->prepare("SELECT t.id, t.description, t.status, t.created_at, p.name AS podcast_name, GROUP_CONCAT(s.name SEPARATOR ', ') AS staff_names 
+                        FROM tasks t 
+                        INNER JOIN podcasts p ON t.podcast_id = p.id 
+                        INNER JOIN staff s ON t.staff_id = s.id 
+                        GROUP BY t.id, t.description, t.status, t.created_at, p.name 
+                        ORDER BY t.created_at DESC");
+$stmt->execute();
+$result = $stmt->get_result();
+$tasks_list = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Generate CSRF token only if not already set
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +87,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         min-height: 100vh;
     }
 
-    /* Sidebar */
     .sidebar {
         width: 240px;
         background: #FFFFFF;
@@ -126,7 +146,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         color: #FFFFFF;
     }
 
-    /* Hamburger */
     .hamburger {
         display: none;
         position: fixed;
@@ -158,7 +177,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         transform: rotate(-45deg) translate(7px, -7px);
     }
 
-    /* Main Content */
     .main-content {
         margin-left: 240px;
         padding: 30px 15px;
@@ -187,7 +205,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         margin-top: 8px;
     }
 
-    /* Message Display */
     .message {
         display: <?php echo isset($_GET['error']) || isset($_GET['success']) ? 'block': 'none';
         ?>;
@@ -201,7 +218,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         font-size: 0.9rem;
     }
 
-    /* Section Styles */
     .admin-section {
         background: #FFFFFF;
         border-radius: 12px;
@@ -253,8 +269,12 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         box-shadow: 0 4px 12px rgba(255, 98, 0, 0.4);
     }
 
-    .admin-section .delete-btn {
-        background: #FF6200;
+    .admin-section .approve-btn {
+        background: #28a745;
+    }
+
+    .admin-section .reject-btn {
+        background: #dc3545;
     }
 
     .admin-section .add-btn {
@@ -264,7 +284,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         margin-top: 10px;
     }
 
-    /* Modal */
     .modal {
         display: none;
         position: fixed;
@@ -316,7 +335,8 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
 
     .modal-content input,
-    .modal-content select {
+    .modal-content select,
+    .modal-content textarea {
         width: 100%;
         padding: 10px;
         border: 2px solid #e5e5e5;
@@ -327,8 +347,13 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         transition: border-color 0.3s ease;
     }
 
+    .modal-content textarea {
+        height: 100px;
+    }
+
     .modal-content input:focus,
-    .modal-content select:focus {
+    .modal-content select:focus,
+    .modal-content textarea:focus {
         outline: none;
         border-color: #FF6200;
     }
@@ -351,7 +376,35 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
     }
 
-    /* Logout Section */
+    .modal-content .cancel-btn {
+        width: 100%;
+        padding: 10px;
+        background: #666666;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .modal-content .cancel-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content .account-details {
+        margin-bottom: 15px;
+        font-size: 0.85rem;
+        color: #1A1A1A;
+    }
+
+    .modal-content .account-details p {
+        margin-bottom: 5px;
+    }
+
     .logout-section {
         margin-top: 25px;
         text-align: center;
@@ -375,7 +428,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
     }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
         .sidebar {
             width: 200px;
@@ -418,12 +470,14 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
         .modal-content input,
-        .modal-content select {
+        .modal-content select,
+        .modal-content textarea {
             font-size: 0.85rem;
             padding: 8px;
         }
 
-        .modal-content .submit-btn {
+        .modal-content .submit-btn,
+        .modal-content .cancel-btn {
             font-size: 0.85rem;
             padding: 8px;
         }
@@ -469,14 +523,11 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 </head>
 
 <body>
-    <!-- Hamburger for mobile -->
     <div class="hamburger" id="hamburger">
         <span></span>
         <span></span>
         <span></span>
     </div>
-
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <span class="close-btn" id="closeSidebar">&times;</span>
         <div class="sidebar-header">
@@ -487,21 +538,25 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             <li><a href="#manage-staff">Manage Staff</a></li>
             <li><a href="#manage-hosts">Manage Hosts</a></li>
             <li><a href="#view-contacts">View Contacts</a></li>
+            <li><a href="#manage-podcasts">Manage Podcasts</a></li>
+            <li><a href="#manage-tasks">Manage Tasks</a></li>
+            <li><a href="#make-payment">Make Payment</a></li>
         </ul>
     </div>
-
-    <!-- Main Content -->
     <div class="main-content">
         <div class="container">
             <div class="message">
                 <?php echo isset($_GET['error']) ? htmlspecialchars($_GET['error']) : (isset($_GET['success']) ? htmlspecialchars($_GET['success']) : ''); ?>
             </div>
-
             <div class="dashboard-header">
                 <h1>Welcome, <?php echo htmlspecialchars($admin_name); ?>!</h1>
-                <p>Manage staff, hosts, and contacts</p>
+                <p>Manage staff, hosts, contacts, podcasts, tasks, and payments</p>
             </div>
-
+            <!-- Make Payment -->
+            <div class="admin-section" id="make-payment">
+                <h3>Make Payment</h3>
+                <button class="add-btn" id="makePaymentBtn">Make New Payment</button>
+            </div>
             <!-- Manage Staff -->
             <div class="admin-section" id="manage-staff">
                 <h3>Manage Staff</h3>
@@ -537,7 +592,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                 </table>
                 <button class="add-btn" id="addStaffBtn">Add New Staff</button>
             </div>
-
             <!-- Manage Hosts -->
             <div class="admin-section" id="manage-hosts">
                 <h3>Manage Hosts</h3>
@@ -567,7 +621,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                 </table>
                 <button class="add-btn" id="addHostBtn">Add New Host</button>
             </div>
-
             <!-- View Contacts -->
             <div class="admin-section" id="view-contacts">
                 <h3>View Contacts</h3>
@@ -600,7 +653,71 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                     </tbody>
                 </table>
             </div>
-
+            <!-- Manage Podcasts -->
+            <div class="admin-section" id="manage-podcasts">
+                <h3>Manage Podcasts</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Host</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($podcasts_list as $podcast): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($podcast['id']); ?></td>
+                            <td><?php echo htmlspecialchars($podcast['name']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($podcast['description'] ?? '', 0, 50)) . (strlen($podcast['description'] ?? '') > 50 ? '...' : ''); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($podcast['host_name']); ?></td>
+                            <td><?php echo ucfirst(htmlspecialchars($podcast['status'])); ?></td>
+                            <td>
+                                <?php if ($podcast['status'] === 'pending'): ?>
+                                <a href="#approve-podcast-<?php echo $podcast['id']; ?>"
+                                    class="btn approve-btn approve-podcast">Approve</a>
+                                <a href="#reject-podcast-<?php echo $podcast['id']; ?>"
+                                    class="btn reject-btn reject-podcast">Reject</a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Manage Tasks -->
+            <div class="admin-section" id="manage-tasks">
+                <h3>Manage Tasks</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Podcast</th>
+                            <th>Staff</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($tasks_list as $task): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($task['id']); ?></td>
+                            <td><?php echo htmlspecialchars($task['podcast_name']); ?></td>
+                            <td><?php echo htmlspecialchars($task['staff_names']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($task['description'], 0, 50)) . (strlen($task['description']) > 50 ? '...' : ''); ?>
+                            </td>
+                            <td><?php echo ucfirst(htmlspecialchars($task['status'])); ?></td>
+                            <td><?php echo htmlspecialchars($task['created_at']); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
             <!-- Logout -->
             <div class="logout-section">
                 <form action="login.php" method="POST">
@@ -611,7 +728,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             </div>
         </div>
     </div>
-
     <!-- Modals -->
     <!-- Add/Edit Staff Modal -->
     <div class="modal" id="staffModal">
@@ -638,7 +754,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             </form>
         </div>
     </div>
-
     <!-- Add/Edit Host Modal -->
     <div class="modal" id="hostModal">
         <div class="modal-content">
@@ -664,7 +779,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             </form>
         </div>
     </div>
-
     <!-- View Contact Modal -->
     <div class="modal" id="contactModal">
         <div class="modal-content">
@@ -676,64 +790,95 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             <p id="contact_date"></p>
         </div>
     </div>
-
+    <!-- Make Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <span class="close-modal" id="closePaymentModal">&times;</span>
+            <h2>Make Payment</h2>
+            <form id="paymentForm" action="make_payment.php" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <div class="form-group">
+                    <label for="payment_type">Payment Type</label>
+                    <select id="payment_type" name="payment_type" required>
+                        <option value="">Select Payment Type</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="staff_id">Select Staff</label>
+                    <select id="staff_id" name="staff_id" onchange="displayAccountDetails()" required>
+                        <option value="">Select Staff</option>
+                        <?php foreach ($staff_list as $staff): ?>
+                        <option value="<?php echo htmlspecialchars($staff['id']); ?>"
+                            data-account-name="<?php echo htmlspecialchars($staff['account_name'] ?? 'N/A'); ?>"
+                            data-bank-name="<?php echo htmlspecialchars($staff['bank_name'] ?? 'N/A'); ?>"
+                            data-account-number="<?php echo htmlspecialchars($staff['account_number'] ?? 'N/A'); ?>">
+                            <?php echo htmlspecialchars($staff['name']); ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="account-details" id="accountDetails" style="display: none;">
+                    <p id="accountName"></p>
+                    <p id="bankName"></p>
+                    <p id="accountNumber"></p>
+                </div>
+                <button type="submit" class="submit-btn">Pay</button>
+                <button type="button" class="cancel-btn" onclick="closeModal('paymentModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
     <script>
     // Sidebar toggle
     const hamburger = document.getElementById('hamburger');
     const sidebar = document.getElementById('sidebar');
     const closeBtn = document.getElementById('closeSidebar');
-
     hamburger.addEventListener('click', () => {
         sidebar.classList.toggle('active');
         hamburger.classList.toggle('active');
     });
-
     closeBtn.addEventListener('click', () => {
         sidebar.classList.remove('active');
         hamburger.classList.remove('active');
     });
-
     document.addEventListener('click', (e) => {
         if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
             sidebar.classList.remove('active');
             hamburger.classList.remove('active');
         }
     });
-
     // Modal functions
     const staffModal = document.getElementById('staffModal');
     const hostModal = document.getElementById('hostModal');
     const contactModal = document.getElementById('contactModal');
-
+    const paymentModal = document.getElementById('paymentModal');
     const closeStaffModal = document.getElementById('closeStaffModal');
     const closeHostModal = document.getElementById('closeHostModal');
     const closeContactModal = document.getElementById('closeContactModal');
+    const closePaymentModal = document.getElementById('closePaymentModal');
 
-    closeStaffModal.addEventListener('click', () => {
-        staffModal.style.display = 'none';
-    });
-
-    closeHostModal.addEventListener('click', () => {
-        hostModal.style.display = 'none';
-    });
-
-    closeContactModal.addEventListener('click', () => {
-        contactModal.style.display = 'none';
-    });
-
-    // Close modals when clicking outside
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    closeStaffModal.addEventListener('click', () => closeModal('staffModal'));
+    closeHostModal.addEventListener('click', () => closeModal('hostModal'));
+    closeContactModal.addEventListener('click', () => closeModal('contactModal'));
+    closePaymentModal.addEventListener('click', () => closeModal('paymentModal'));
     window.addEventListener('click', (e) => {
-        if (e.target === staffModal) {
-            staffModal.style.display = 'none';
-        }
-        if (e.target === hostModal) {
-            hostModal.style.display = 'none';
-        }
-        if (e.target === contactModal) {
-            contactModal.style.display = 'none';
-        }
+        if (e.target === staffModal) closeModal('staffModal');
+        if (e.target === hostModal) closeModal('hostModal');
+        if (e.target === contactModal) closeModal('contactModal');
+        if (e.target === paymentModal) closeModal('paymentModal');
     });
-
     // Add Staff
     document.getElementById('addStaffBtn').addEventListener('click', () => {
         document.getElementById('staffModalTitle').textContent = 'Add Staff';
@@ -745,7 +890,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         document.getElementById('staff_password').value = '';
         staffModal.style.display = 'flex';
     });
-
     // Edit Staff
     document.querySelectorAll('.edit-staff').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -757,12 +901,10 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             document.getElementById('staff_id').value = row.cells[0].textContent;
             document.getElementById('staff_name').value = row.cells[1].textContent;
             document.getElementById('staff_email').value = row.cells[2].textContent;
-            document.getElementById('staff_password').value =
-                ''; // Password not pre-filled for security
+            document.getElementById('staff_password').value = '';
             staffModal.style.display = 'flex';
         });
     });
-
     // Delete Staff
     document.querySelectorAll('.delete-staff').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -782,7 +924,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             }
         });
     });
-
     // Add Host
     document.getElementById('addHostBtn').addEventListener('click', () => {
         document.getElementById('hostModalTitle').textContent = 'Add Host';
@@ -794,7 +935,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         document.getElementById('host_passcode').value = '';
         hostModal.style.display = 'flex';
     });
-
     // Edit Host
     document.querySelectorAll('.edit-host').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -806,11 +946,10 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             document.getElementById('host_id').value = row.cells[0].textContent;
             document.getElementById('host_name').value = row.cells[1].textContent;
             document.getElementById('host_host_id').value = row.cells[2].textContent;
-            document.getElementById('host_passcode').value = ''; // Passcode not pre-filled
+            document.getElementById('host_passcode').value = '';
             hostModal.style.display = 'flex';
         });
     });
-
     // Delete Host
     document.querySelectorAll('.delete-host').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -830,7 +969,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             }
         });
     });
-
     // View Contact
     document.querySelectorAll('.view-contact').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -839,12 +977,11 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             document.getElementById('contact_name').textContent = 'Name: ' + row.cells[1].textContent;
             document.getElementById('contact_email').textContent = 'Email: ' + row.cells[2].textContent;
             document.getElementById('contact_message').textContent = 'Message: ' + row.cells[3]
-                .textContent;
+                .textContent.replace('...', '');
             document.getElementById('contact_date').textContent = 'Date: ' + row.cells[4].textContent;
             contactModal.style.display = 'flex';
         });
     });
-
     // Delete Contact
     document.querySelectorAll('.delete-contact').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -863,6 +1000,95 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                 form.submit();
             }
         });
+    });
+    // Approve Podcast
+    document.querySelectorAll('.approve-podcast').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to approve this podcast?')) {
+                const form = document.createElement('form');
+                form.action = 'manage_podcast_admin.php';
+                form.method = 'POST';
+                form.style.display = 'none';
+                form.innerHTML = `
+                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                        <input type="hidden" name="action" value="approve">
+                        <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
+                    `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+    // Reject Podcast
+    document.querySelectorAll('.reject-podcast').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to reject this podcast?')) {
+                const form = document.createElement('form');
+                form.action = 'manage_podcast_admin.php';
+                form.method = 'POST';
+                form.style.display = 'none';
+                form.innerHTML = `
+                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                        <input type="hidden" name="action" value="reject">
+                        <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
+                    `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+    // Make Payment
+    document.getElementById('makePaymentBtn').addEventListener('click', () => {
+        document.getElementById('paymentForm').reset();
+        document.getElementById('accountDetails').style.display = 'none';
+        paymentModal.style.display = 'flex';
+    });
+    // Display Account Details
+    function displayAccountDetails() {
+        const staffSelect = document.getElementById('staff_id');
+        const selectedOption = staffSelect.options[staffSelect.selectedIndex];
+        const accountDetails = document.getElementById('accountDetails');
+        const accountName = document.getElementById('accountName');
+        const bankName = document.getElementById('bankName');
+        const accountNumber = document.getElementById('accountNumber');
+        if (selectedOption.value) {
+            accountName.textContent = 'Account Name: ' + (selectedOption.getAttribute('data-account-name') || 'N/A');
+            bankName.textContent = 'Bank Name: ' + (selectedOption.getAttribute('data-bank-name') || 'N/A');
+            accountNumber.textContent = 'Account Number: ' + (selectedOption.getAttribute('data-account-number') ||
+                'N/A');
+            accountDetails.style.display = 'block';
+        } else {
+            accountDetails.style.display = 'none';
+        }
+    }
+    // Validate Payment Form
+    document.getElementById('paymentForm').addEventListener('submit', (e) => {
+        const paymentType = document.getElementById('payment_type').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const staffId = document.getElementById('staff_id').value;
+        console.log('Payment Type:', paymentType);
+        console.log('Amount:', amount, 'Type:', typeof amount);
+        console.log('Staff ID:', staffId);
+        if (!paymentType) {
+            console.log('Validation failed: Payment Type is empty');
+            e.preventDefault();
+            alert('Please select a valid payment type.');
+            return;
+        }
+        if (!amount || isNaN(amount) || amount <= 0) {
+            console.log('Validation failed: Amount is invalid', amount);
+            e.preventDefault();
+            alert('Please enter a valid amount greater than 0.');
+            return;
+        }
+        if (!staffId) {
+            console.log('Validation failed: Staff ID is empty');
+            e.preventDefault();
+            alert('Please select a staff member.');
+            return;
+        }
     });
     </script>
 </body>
