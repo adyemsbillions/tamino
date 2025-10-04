@@ -57,6 +57,16 @@ $result = $stmt->get_result();
 $tasks_list = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Fetch payment history
+$stmt = $conn->prepare("SELECT p.id, p.staff_id, p.amount, p.payment_type, p.status, p.created_at, s.name AS staff_name 
+                        FROM payments p 
+                        INNER JOIN staff s ON p.staff_id = s.id 
+                        ORDER BY p.created_at DESC");
+$stmt->execute();
+$result = $stmt->get_result();
+$payment_history = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
 // Generate CSRF token only if not already set
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -376,10 +386,10 @@ if (!isset($_SESSION['csrf_token'])) {
         box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
     }
 
-    .modal-content .cancel-btn {
+    .modal-content .next-btn {
         width: 100%;
         padding: 10px;
-        background: #666666;
+        background: #28a745;
         color: #FFFFFF;
         border: none;
         border-radius: 8px;
@@ -390,15 +400,19 @@ if (!isset($_SESSION['csrf_token'])) {
         transition: transform 0.2s ease, box-shadow 0.3s ease;
     }
 
-    .modal-content .cancel-btn:hover {
+    .modal-content .next-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 6px 16px rgba(0, 128, 0, 0.4);
     }
 
     .modal-content .account-details {
         margin-bottom: 15px;
         font-size: 0.85rem;
         color: #1A1A1A;
+        background: #F9F9F9;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #e5e5e5;
     }
 
     .modal-content .account-details p {
@@ -477,7 +491,7 @@ if (!isset($_SESSION['csrf_token'])) {
         }
 
         .modal-content .submit-btn,
-        .modal-content .cancel-btn {
+        .modal-content .next-btn {
             font-size: 0.85rem;
             padding: 8px;
         }
@@ -541,6 +555,7 @@ if (!isset($_SESSION['csrf_token'])) {
             <li><a href="#manage-podcasts">Manage Podcasts</a></li>
             <li><a href="#manage-tasks">Manage Tasks</a></li>
             <li><a href="#make-payment">Make Payment</a></li>
+            <li><a href="#payment-history">Payment History</a></li>
         </ul>
     </div>
     <div class="main-content">
@@ -556,6 +571,34 @@ if (!isset($_SESSION['csrf_token'])) {
             <div class="admin-section" id="make-payment">
                 <h3>Make Payment</h3>
                 <button class="add-btn" id="makePaymentBtn">Make New Payment</button>
+            </div>
+            <!-- Payment History -->
+            <div class="admin-section" id="payment-history">
+                <h3>Payment History</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Staff Name</th>
+                            <th>Amount</th>
+                            <th>Payment Type</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($payment_history as $payment): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($payment['id']); ?></td>
+                            <td><?php echo htmlspecialchars($payment['staff_name']); ?></td>
+                            <td><?php echo htmlspecialchars(number_format($payment['amount'], 2)); ?></td>
+                            <td><?php echo htmlspecialchars($payment['payment_type']); ?></td>
+                            <td><?php echo ucfirst(htmlspecialchars($payment['status'])); ?></td>
+                            <td><?php echo htmlspecialchars($payment['created_at']); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
             <!-- Manage Staff -->
             <div class="admin-section" id="manage-staff">
@@ -812,7 +855,7 @@ if (!isset($_SESSION['csrf_token'])) {
                 </div>
                 <div class="form-group">
                     <label for="staff_id">Select Staff</label>
-                    <select id="staff_id" name="staff_id" onchange="displayAccountDetails()" required>
+                    <select id="staff_id" name="staff_id" required>
                         <option value="">Select Staff</option>
                         <?php foreach ($staff_list as $staff): ?>
                         <option value="<?php echo htmlspecialchars($staff['id']); ?>"
@@ -829,266 +872,341 @@ if (!isset($_SESSION['csrf_token'])) {
                     <p id="bankName"></p>
                     <p id="accountNumber"></p>
                 </div>
-                <button type="submit" class="submit-btn">Pay</button>
-                <button type="button" class="cancel-btn" onclick="closeModal('paymentModal')">Cancel</button>
+                <button type="button" class="next-btn" id="nextBtn" style="display: none;">Next</button>
+                <button type="submit" class="submit-btn" id="payBtn" style="display: none;">Pay</button>
             </form>
         </div>
     </div>
     <script>
-    // Sidebar toggle
-    const hamburger = document.getElementById('hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const closeBtn = document.getElementById('closeSidebar');
-    hamburger.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-        hamburger.classList.toggle('active');
-    });
-    closeBtn.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        hamburger.classList.remove('active');
-    });
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded');
+
+        // Sidebar toggle
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+        const closeBtn = document.getElementById('closeSidebar');
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+        closeBtn.addEventListener('click', () => {
             sidebar.classList.remove('active');
             hamburger.classList.remove('active');
-        }
-    });
-    // Modal functions
-    const staffModal = document.getElementById('staffModal');
-    const hostModal = document.getElementById('hostModal');
-    const contactModal = document.getElementById('contactModal');
-    const paymentModal = document.getElementById('paymentModal');
-    const closeStaffModal = document.getElementById('closeStaffModal');
-    const closeHostModal = document.getElementById('closeHostModal');
-    const closeContactModal = document.getElementById('closeContactModal');
-    const closePaymentModal = document.getElementById('closePaymentModal');
+        });
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !hamburger.contains(e
+                    .target)) {
+                sidebar.classList.remove('active');
+                hamburger.classList.remove('active');
+            }
+        });
 
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
+        // Modal functions
+        const staffModal = document.getElementById('staffModal');
+        const hostModal = document.getElementById('hostModal');
+        const contactModal = document.getElementById('contactModal');
+        const paymentModal = document.getElementById('paymentModal');
+        const closeStaffModal = document.getElementById('closeStaffModal');
+        const closeHostModal = document.getElementById('closeHostModal');
+        const closeContactModal = document.getElementById('closeContactModal');
+        const closePaymentModal = document.getElementById('closePaymentModal');
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
-    }
-    closeStaffModal.addEventListener('click', () => closeModal('staffModal'));
-    closeHostModal.addEventListener('click', () => closeModal('hostModal'));
-    closeContactModal.addEventListener('click', () => closeModal('contactModal'));
-    closePaymentModal.addEventListener('click', () => closeModal('paymentModal'));
-    window.addEventListener('click', (e) => {
-        if (e.target === staffModal) closeModal('staffModal');
-        if (e.target === hostModal) closeModal('hostModal');
-        if (e.target === contactModal) closeModal('contactModal');
-        if (e.target === paymentModal) closeModal('paymentModal');
-    });
-    // Add Staff
-    document.getElementById('addStaffBtn').addEventListener('click', () => {
-        document.getElementById('staffModalTitle').textContent = 'Add Staff';
-        document.getElementById('staffForm').action = 'manage_staff.php';
-        document.getElementById('staffForm').querySelector('input[name="action"]').value = 'add';
-        document.getElementById('staff_id').value = '';
-        document.getElementById('staff_name').value = '';
-        document.getElementById('staff_email').value = '';
-        document.getElementById('staff_password').value = '';
-        staffModal.style.display = 'flex';
-    });
-    // Edit Staff
-    document.querySelectorAll('.edit-staff').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const row = e.target.closest('tr');
-            document.getElementById('staffModalTitle').textContent = 'Edit Staff';
+        closeStaffModal.addEventListener('click', () => closeModal('staffModal'));
+        closeHostModal.addEventListener('click', () => closeModal('hostModal'));
+        closeContactModal.addEventListener('click', () => closeModal('contactModal'));
+        closePaymentModal.addEventListener('click', () => closeModal('paymentModal'));
+        window.addEventListener('click', (e) => {
+            if (e.target === staffModal) closeModal('staffModal');
+            if (e.target === hostModal) closeModal('hostModal');
+            if (e.target === contactModal) closeModal('contactModal');
+            if (e.target === paymentModal) closeModal('paymentModal');
+        });
+
+        // Add Staff
+        document.getElementById('addStaffBtn').addEventListener('click', () => {
+            document.getElementById('staffModalTitle').textContent = 'Add Staff';
             document.getElementById('staffForm').action = 'manage_staff.php';
-            document.getElementById('staffForm').querySelector('input[name="action"]').value = 'edit';
-            document.getElementById('staff_id').value = row.cells[0].textContent;
-            document.getElementById('staff_name').value = row.cells[1].textContent;
-            document.getElementById('staff_email').value = row.cells[2].textContent;
+            document.getElementById('staffForm').querySelector('input[name="action"]').value = 'add';
+            document.getElementById('staff_id').value = '';
+            document.getElementById('staff_name').value = '';
+            document.getElementById('staff_email').value = '';
             document.getElementById('staff_password').value = '';
             staffModal.style.display = 'flex';
         });
-    });
-    // Delete Staff
-    document.querySelectorAll('.delete-staff').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to delete this staff member?')) {
-                const form = document.createElement('form');
-                form.action = 'manage_staff.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="staff_id" value="${e.target.closest('tr').cells[0].textContent}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
-            }
+
+        // Edit Staff
+        document.querySelectorAll('.edit-staff').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const row = e.target.closest('tr');
+                document.getElementById('staffModalTitle').textContent = 'Edit Staff';
+                document.getElementById('staffForm').action = 'manage_staff.php';
+                document.getElementById('staffForm').querySelector('input[name="action"]')
+                    .value = 'edit';
+                document.getElementById('staff_id').value = row.cells[0].textContent;
+                document.getElementById('staff_name').value = row.cells[1].textContent;
+                document.getElementById('staff_email').value = row.cells[2].textContent;
+                document.getElementById('staff_password').value = '';
+                staffModal.style.display = 'flex';
+            });
         });
-    });
-    // Add Host
-    document.getElementById('addHostBtn').addEventListener('click', () => {
-        document.getElementById('hostModalTitle').textContent = 'Add Host';
-        document.getElementById('hostForm').action = 'manage_host.php';
-        document.getElementById('hostForm').querySelector('input[name="action"]').value = 'add';
-        document.getElementById('host_id').value = '';
-        document.getElementById('host_name').value = '';
-        document.getElementById('host_host_id').value = '';
-        document.getElementById('host_passcode').value = '';
-        hostModal.style.display = 'flex';
-    });
-    // Edit Host
-    document.querySelectorAll('.edit-host').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const row = e.target.closest('tr');
-            document.getElementById('hostModalTitle').textContent = 'Edit Host';
+
+        // Delete Staff
+        document.querySelectorAll('.delete-staff').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to delete this staff member?')) {
+                    const form = document.createElement('form');
+                    form.action = 'manage_staff.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="staff_id" value="${e.target.closest('tr').cells[0].textContent}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // Add Host
+        document.getElementById('addHostBtn').addEventListener('click', () => {
+            document.getElementById('hostModalTitle').textContent = 'Add Host';
             document.getElementById('hostForm').action = 'manage_host.php';
-            document.getElementById('hostForm').querySelector('input[name="action"]').value = 'edit';
-            document.getElementById('host_id').value = row.cells[0].textContent;
-            document.getElementById('host_name').value = row.cells[1].textContent;
-            document.getElementById('host_host_id').value = row.cells[2].textContent;
+            document.getElementById('hostForm').querySelector('input[name="action"]').value = 'add';
+            document.getElementById('host_id').value = '';
+            document.getElementById('host_name').value = '';
+            document.getElementById('host_host_id').value = '';
             document.getElementById('host_passcode').value = '';
             hostModal.style.display = 'flex';
         });
-    });
-    // Delete Host
-    document.querySelectorAll('.delete-host').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to delete this host?')) {
-                const form = document.createElement('form');
-                form.action = 'manage_host.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="host_id" value="${e.target.closest('tr').cells[0].textContent}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
+
+        // Edit Host
+        document.querySelectorAll('.edit-host').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const row = e.target.closest('tr');
+                document.getElementById('hostModalTitle').textContent = 'Edit Host';
+                document.getElementById('hostForm').action = 'manage_host.php';
+                document.getElementById('hostForm').querySelector('input[name="action"]')
+                    .value = 'edit';
+                document.getElementById('host_id').value = row.cells[0].textContent;
+                document.getElementById('host_name').value = row.cells[1].textContent;
+                document.getElementById('host_host_id').value = row.cells[2].textContent;
+                document.getElementById('host_passcode').value = '';
+                hostModal.style.display = 'flex';
+            });
+        });
+
+        // Delete Host
+        document.querySelectorAll('.delete-host').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to delete this host?')) {
+                    const form = document.createElement('form');
+                    form.action = 'manage_host.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="host_id" value="${e.target.closest('tr').cells[0].textContent}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // View Contact
+        document.querySelectorAll('.view-contact').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const row = e.target.closest('tr');
+                document.getElementById('contact_name').textContent = 'Name: ' + row.cells[1]
+                    .textContent;
+                document.getElementById('contact_email').textContent = 'Email: ' + row.cells[2]
+                    .textContent;
+                document.getElementById('contact_message').textContent = 'Message: ' + row
+                    .cells[3].textContent.replace('...', '');
+                document.getElementById('contact_date').textContent = 'Date: ' + row.cells[4]
+                    .textContent;
+                contactModal.style.display = 'flex';
+            });
+        });
+
+        // Delete Contact
+        document.querySelectorAll('.delete-contact').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to delete this contact?')) {
+                    const form = document.createElement('form');
+                    form.action = 'manage_contact.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="contact_id" value="${e.target.closest('tr').cells[0].textContent}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // Approve Podcast
+        document.querySelectorAll('.approve-podcast').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to approve this podcast?')) {
+                    const form = document.createElement('form');
+                    form.action = 'manage_podcast_admin.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="approve">
+                            <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // Reject Podcast
+        document.querySelectorAll('.reject-podcast').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to reject this podcast?')) {
+                    const form = document.createElement('form');
+                    form.action = 'manage_podcast_admin.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="reject">
+                            <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+
+        // Make Payment
+        document.getElementById('makePaymentBtn').addEventListener('click', () => {
+            const paymentForm = document.getElementById('paymentForm');
+            paymentForm.reset();
+            document.getElementById('payment_type').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('staff_id').value = '';
+            document.getElementById('accountDetails').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('payBtn').style.display = 'none';
+            paymentModal.style.display = 'flex';
+            console.log('Payment modal opened, form reset');
+            // Trigger change event manually
+            const staffSelect = document.getElementById('staff_id');
+            staffSelect.dispatchEvent(new Event('change'));
+        });
+
+        // Show Next Button on Staff Selection
+        document.getElementById('staff_id').addEventListener('change', () => {
+            const staffSelect = document.getElementById('staff_id');
+            const nextBtn = document.getElementById('nextBtn');
+            const payBtn = document.getElementById('payBtn');
+            const accountDetails = document.getElementById('accountDetails');
+            console.log('staff_id change event triggered, value:', staffSelect ? staffSelect.value :
+                'staffSelect not found');
+            console.log('nextBtn element:', nextBtn);
+            if (!staffSelect || !nextBtn) {
+                console.error('Error: staffSelect or nextBtn not found in DOM');
+                return;
+            }
+            if (staffSelect.value !== '') {
+                console.log('Staff selected, showing Next button');
+                nextBtn.style.display = 'block';
+                payBtn.style.display = 'none';
+                accountDetails.style.display = 'none';
+            } else {
+                console.log('No staff selected, hiding Next and Pay buttons');
+                nextBtn.style.display = 'none';
+                payBtn.style.display = 'none';
+                accountDetails.style.display = 'none';
             }
         });
-    });
-    // View Contact
-    document.querySelectorAll('.view-contact').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const row = e.target.closest('tr');
-            document.getElementById('contact_name').textContent = 'Name: ' + row.cells[1].textContent;
-            document.getElementById('contact_email').textContent = 'Email: ' + row.cells[2].textContent;
-            document.getElementById('contact_message').textContent = 'Message: ' + row.cells[3]
-                .textContent.replace('...', '');
-            document.getElementById('contact_date').textContent = 'Date: ' + row.cells[4].textContent;
-            contactModal.style.display = 'flex';
-        });
-    });
-    // Delete Contact
-    document.querySelectorAll('.delete-contact').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to delete this contact?')) {
-                const form = document.createElement('form');
-                form.action = 'manage_contact.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="contact_id" value="${e.target.closest('tr').cells[0].textContent}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
+
+        // Display Account Details and Pay Button on Next Button Click
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            const staffSelect = document.getElementById('staff_id');
+            const staffId = staffSelect.value;
+            const selectedOption = staffSelect.options[staffSelect.selectedIndex];
+            const accountDetails = document.getElementById('accountDetails');
+            const accountName = document.getElementById('accountName');
+            const bankName = document.getElementById('bankName');
+            const accountNumber = document.getElementById('accountNumber');
+            const nextBtn = document.getElementById('nextBtn');
+            const payBtn = document.getElementById('payBtn');
+            console.log('Next button clicked, Staff ID:', staffId);
+            if (staffId === '') {
+                console.log('Validation failed: No staff selected');
+                alert('Please select a staff member.');
+                return;
             }
-        });
-    });
-    // Approve Podcast
-    document.querySelectorAll('.approve-podcast').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to approve this podcast?')) {
-                const form = document.createElement('form');
-                form.action = 'manage_podcast_admin.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="approve">
-                        <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    });
-    // Reject Podcast
-    document.querySelectorAll('.reject-podcast').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to reject this podcast?')) {
-                const form = document.createElement('form');
-                form.action = 'manage_podcast_admin.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="reject">
-                        <input type="hidden" name="podcast_id" value="${e.target.closest('tr').cells[0].textContent}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    });
-    // Make Payment
-    document.getElementById('makePaymentBtn').addEventListener('click', () => {
-        document.getElementById('paymentForm').reset();
-        document.getElementById('accountDetails').style.display = 'none';
-        paymentModal.style.display = 'flex';
-    });
-    // Display Account Details
-    function displayAccountDetails() {
-        const staffSelect = document.getElementById('staff_id');
-        const selectedOption = staffSelect.options[staffSelect.selectedIndex];
-        const accountDetails = document.getElementById('accountDetails');
-        const accountName = document.getElementById('accountName');
-        const bankName = document.getElementById('bankName');
-        const accountNumber = document.getElementById('accountNumber');
-        if (selectedOption.value) {
-            accountName.textContent = 'Account Name: ' + (selectedOption.getAttribute('data-account-name') || 'N/A');
-            bankName.textContent = 'Bank Name: ' + (selectedOption.getAttribute('data-bank-name') || 'N/A');
-            accountNumber.textContent = 'Account Number: ' + (selectedOption.getAttribute('data-account-number') ||
+            console.log('Selected staff text:', selectedOption.text);
+            console.log('Account Name:', selectedOption.getAttribute('data-account-name'));
+            console.log('Bank Name:', selectedOption.getAttribute('data-bank-name'));
+            console.log('Account Number:', selectedOption.getAttribute('data-account-number'));
+            accountName.textContent = 'Account Name: ' + (selectedOption.getAttribute(
+                'data-account-name') || 'N/A');
+            bankName.textContent = 'Bank Name: ' + (selectedOption.getAttribute('data-bank-name') ||
                 'N/A');
+            accountNumber.textContent = 'Account Number: ' + (selectedOption.getAttribute(
+                'data-account-number') || 'N/A');
             accountDetails.style.display = 'block';
-        } else {
-            accountDetails.style.display = 'none';
-        }
-    }
-    // Validate Payment Form
-    document.getElementById('paymentForm').addEventListener('submit', (e) => {
-        const paymentType = document.getElementById('payment_type').value;
-        const amount = parseFloat(document.getElementById('amount').value);
-        const staffId = document.getElementById('staff_id').value;
-        console.log('Payment Type:', paymentType);
-        console.log('Amount:', amount, 'Type:', typeof amount);
-        console.log('Staff ID:', staffId);
-        if (!paymentType) {
-            console.log('Validation failed: Payment Type is empty');
-            e.preventDefault();
-            alert('Please select a valid payment type.');
-            return;
-        }
-        if (!amount || isNaN(amount) || amount <= 0) {
-            console.log('Validation failed: Amount is invalid', amount);
-            e.preventDefault();
-            alert('Please enter a valid amount greater than 0.');
-            return;
-        }
-        if (!staffId) {
-            console.log('Validation failed: Staff ID is empty');
-            e.preventDefault();
-            alert('Please select a staff member.');
-            return;
-        }
+            nextBtn.style.display = 'none';
+            payBtn.style.display = 'block';
+        });
+
+        // Validate Payment Form
+        document.getElementById('paymentForm').addEventListener('submit', (e) => {
+            const paymentType = document.getElementById('payment_type').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const staffSelect = document.getElementById('staff_id');
+            const staffId = staffSelect.value;
+            console.log('Form submitted');
+            console.log('Payment Type:', paymentType);
+            console.log('Amount:', amount, 'Type:', typeof amount);
+            console.log('Staff ID:', staffId);
+            if (!paymentType) {
+                console.log('Validation failed: Payment Type is empty');
+                e.preventDefault();
+                alert('Please select a valid payment type.');
+                return;
+            }
+            if (!amount || isNaN(amount) || amount <= 0) {
+                console.log('Validation failed: Amount is invalid', amount);
+                e.preventDefault();
+                alert('Please enter a valid amount greater than 0.');
+                return;
+            }
+            if (staffId === '') {
+                console.log('Validation failed: Staff ID is empty or invalid');
+                e.preventDefault();
+                alert('Please select a staff member.');
+                return;
+            }
+        });
     });
     </script>
 </body>
