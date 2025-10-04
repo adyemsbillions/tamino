@@ -106,7 +106,7 @@ $banks = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard - Tamino ETV</title>
+    <title>Staff Dashboard - Tamino eTV</title>
     <style>
     * {
         margin: 0;
@@ -398,6 +398,7 @@ $banks = [
 
     .modal {
         display: none;
+        /* Hide modal by default */
         position: fixed;
         top: 0;
         left: 0;
@@ -405,7 +406,6 @@ $banks = [
         height: 100%;
         background: rgba(0, 0, 0, 0.6);
         z-index: 1002;
-        display: flex;
         align-items: center;
         justify-content: center;
     }
@@ -557,7 +557,6 @@ $banks = [
         text-decoration: none;
         text-align: center;
         transition: transform 0.2s ease, box-shadow 0.3s ease;
-        touch-action: manipulation;
     }
 
     .dashboard-card .btn:hover {
@@ -722,7 +721,7 @@ $banks = [
     <div class="sidebar" id="sidebar">
         <span class="close-btn" id="closeSidebar">&times;</span>
         <div class="sidebar-header">
-            <h2>TAMINO ETV</h2>
+            <h2>TAMINO eTV</h2>
         </div>
         <ul class="sidebar-menu">
             <li><a href="index.php">Home</a></li>
@@ -749,7 +748,7 @@ $banks = [
                 <?php else: ?>
                 <p>No bank account details provided.</p>
                 <?php endif; ?>
-                <button class="btn" data-modal="bankModal">Update Bank Details</button>
+                <button class="btn" id="openBankModal">Update Bank Details</button>
             </div>
             <div class="payment-section" id="payment-history">
                 <h3>Payment History</h3>
@@ -761,7 +760,7 @@ $banks = [
                         <tr>
                             <th>Amount</th>
                             <th>Payment Type</th>
-                            <th>Status</th>
+                            <!-- <th>Status</th> -->
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -770,7 +769,7 @@ $banks = [
                         <tr>
                             <td><?php echo htmlspecialchars(number_format($payment['amount'], 2)); ?></td>
                             <td><?php echo htmlspecialchars($payment['payment_type']); ?></td>
-                            <td><?php echo ucfirst(htmlspecialchars($payment['status'])); ?></td>
+                            <!-- <td><?php echo ucfirst(htmlspecialchars($payment['status'])); ?></td> -->
                             <td><?php echo htmlspecialchars($payment['created_at']); ?></td>
                         </tr>
                         <?php endforeach; ?>
@@ -796,7 +795,7 @@ $banks = [
                             <th>Podcast Name</th>
                             <th>Podcast Description</th>
                             <th>Task Description</th>
-                            <th class="status" data-tooltip="Task completion status">Status</th>
+                            <!-- <th class="status" data-tooltip="Task completion status">Status</th> -->
                             <th>PDF File</th>
                             <th>Created At</th>
                             <th>Actions</th>
@@ -810,8 +809,8 @@ $banks = [
                             </td>
                             <td><?php echo htmlspecialchars(substr($task['description'], 0, 50)) . (strlen($task['description']) > 50 ? '...' : ''); ?>
                             </td>
-                            <td class="status" data-tooltip="Task completion status">
-                                <?php echo ucfirst(htmlspecialchars($task['status'])); ?></td>
+                            <!-- <td class="status" data-tooltip="Task completion status">
+                                <?php echo ucfirst(htmlspecialchars($task['status'])); ?></td> -->
                             <td><?php echo $task['pdf_file_path'] ? '<a href="' . htmlspecialchars($task['pdf_file_path']) . '" target="_blank">View PDF</a>' : 'No PDF'; ?>
                             </td>
                             <td><?php echo htmlspecialchars($task['created_at']); ?></td>
@@ -879,8 +878,7 @@ $banks = [
                         <option value="">Select Bank</option>
                         <?php foreach ($banks as $bank): ?>
                         <option value="<?php echo htmlspecialchars($bank); ?>"
-                            <?php echo $bank_name === $bank ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($bank); ?>
+                            <?php echo $bank_name === $bank ? 'selected' : ''; ?>><?php echo htmlspecialchars($bank); ?>
                         </option>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
@@ -899,90 +897,105 @@ $banks = [
         </div>
     </div>
     <script>
-    // Sidebar toggle
-    const hamburger = document.getElementById('hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const closeBtn = document.getElementById('closeSidebar');
-    hamburger.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-        hamburger.classList.toggle('active');
-    });
-    closeBtn.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        hamburger.classList.remove('active');
-    });
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded');
+
+        // Explicitly hide bank modal on page load
+        const bankModal = document.getElementById('bankModal');
+        bankModal.style.display = 'none';
+
+        // Sidebar toggle
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+        const closeBtn = document.getElementById('closeSidebar');
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+        closeBtn.addEventListener('click', () => {
             sidebar.classList.remove('active');
             hamburger.classList.remove('active');
-        }
-    });
-    // Modal functions
-    const bankModal = document.getElementById('bankModal');
-    const closeBankModal = document.getElementById('closeBankModal');
-
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    closeBankModal.addEventListener('click', () => closeModal('bankModal'));
-    window.addEventListener('click', (e) => {
-        if (e.target === bankModal) {
-            closeModal('bankModal');
-        }
-    });
-    // Open Bank Details Modal
-    document.querySelector('.bank-details .btn').addEventListener('click', () => {
-        bankModal.style.display = 'flex';
-        toggleOtherBankInput();
-    });
-    // Toggle Other Bank Input
-    function toggleOtherBankInput() {
-        const bankSelect = document.getElementById('bank_name_select');
-        const otherBankInput = document.getElementById('otherBankInput');
-        if (bankSelect.value === 'Other') {
-            otherBankInput.style.display = 'block';
-            otherBankInput.required = true;
-        } else {
-            otherBankInput.style.display = 'none';
-            otherBankInput.required = false;
-        }
-    }
-    // Initialize bank input visibility
-    toggleOtherBankInput();
-    // Filter Tasks
-    function filterTasks() {
-        const filter = document.getElementById('taskFilter').value;
-        const rows = document.querySelectorAll('#tasksTable tbody tr');
-        rows.forEach(row => {
-            const status = row.getAttribute('data-status');
-            row.style.display = filter === 'all' || status === filter ? '' : 'none';
         });
-    }
-    // Complete Task
-    document.querySelectorAll('.complete-task').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to mark this task as completed?')) {
-                const taskId = e.target.getAttribute('data-task-id');
-                const form = document.createElement('form');
-                form.action = 'manage_task.php';
-                form.method = 'POST';
-                form.style.display = 'none';
-                form.innerHTML = `
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                        <input type="hidden" name="action" value="complete">
-                        <input type="hidden" name="task_id" value="${taskId}">
-                    `;
-                document.body.appendChild(form);
-                form.submit();
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !hamburger.contains(e
+                    .target)) {
+                sidebar.classList.remove('active');
+                hamburger.classList.remove('active');
             }
+        });
+
+        // Modal functions
+        const closeBankModal = document.getElementById('closeBankModal');
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        closeBankModal.addEventListener('click', () => closeModal('bankModal'));
+        window.addEventListener('click', (e) => {
+            if (e.target === bankModal) {
+                closeModal('bankModal');
+            }
+        });
+
+        // Open Bank Details Modal
+        document.getElementById('openBankModal').addEventListener('click', () => {
+            console.log('Update Bank Details button clicked');
+            bankModal.style.display = 'flex';
+            toggleOtherBankInput();
+        });
+
+        // Toggle Other Bank Input
+        function toggleOtherBankInput() {
+            const bankSelect = document.getElementById('bank_name_select');
+            const otherBankInput = document.getElementById('otherBankInput');
+            if (bankSelect.value === 'Other') {
+                otherBankInput.style.display = 'block';
+                otherBankInput.required = true;
+            } else {
+                otherBankInput.style.display = 'none';
+                otherBankInput.required = false;
+            }
+        }
+
+        // Initialize bank input visibility
+        toggleOtherBankInput();
+
+        // Filter Tasks
+        function filterTasks() {
+            const filter = document.getElementById('taskFilter').value;
+            const rows = document.querySelectorAll('#tasksTable tbody tr');
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                row.style.display = filter === 'all' || status === filter ? '' : 'none';
+            });
+        }
+
+        // Complete Task
+        document.querySelectorAll('.complete-task').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to mark this task as completed?')) {
+                    const taskId = e.target.getAttribute('data-task-id');
+                    const form = document.createElement('form');
+                    form.action = 'manage_task.php';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="action" value="complete">
+                            <input type="hidden" name="task_id" value="${taskId}">
+                        `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         });
     });
     </script>
 </body>
 
 </html>
-<?php $conn->close(); ?>
+<?php $conn->close(); ?>y

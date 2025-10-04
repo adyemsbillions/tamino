@@ -4,567 +4,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tamino ETV - Professional Podcasting</title>
+    <title>Tamino eTV - Professional Podcasting</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
+    }
 
-        body {
-            background: #1A1A1A;
-            color: #FFFFFF;
-        }
+    body {
+        background: #1A1A1A;
+        color: #FFFFFF;
+    }
 
-        /* Error/Success Message */
-        .message {
-            display: <?php echo isset($_GET['error']) || isset($_GET['success']) ? 'block' : 'none';
-                        ?>;
-            background: <?php echo isset($_GET['error']) ? '#FF6200' : '#FFC107';
-                        ?>;
-            color: #FFFFFF;
-            padding: 10px;
-            text-align: center;
-            font-size: 16px;
-            position: fixed;
-            width: 100%;
-            top: 60px;
-            z-index: 1000;
-        }
+    /* Error/Success Message */
+    .message {
+        display: <?php echo isset($_GET['error']) || isset($_GET['success']) ? 'block': 'none';
+        ?>;
+        background: <?php echo isset($_GET['error']) ? '#FF6200': '#FFC107';
+        ?>;
+        color: #FFFFFF;
+        padding: 10px;
+        text-align: center;
+        font-size: 16px;
+        position: fixed;
+        width: 100%;
+        top: 60px;
+        z-index: 1000;
+    }
 
-        /* Navigation */
-        .navbar {
-            background: #1A1A1A;
-            padding: 15px 0;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-        }
+    /* Navigation */
+    .navbar {
+        background: #1A1A1A;
+        padding: 15px 0;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+    }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
 
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .nav-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .nav-logo h1 {
-            color: #FFC107;
-            font-size: 28px;
-            font-weight: 700;
-        }
+    .nav-logo h1 {
+        color: #FFC107;
+        font-size: 28px;
+        font-weight: 700;
+    }
 
+    .nav-menu {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-link {
+        color: #FFFFFF;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .nav-link:hover {
+        color: #FF6200;
+    }
+
+    .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+    }
+
+    .hamburger span {
+        background: #FFC107;
+        height: 3px;
+        width: 25px;
+        margin: 4px 0;
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
         .nav-menu {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-link {
-            color: #FFFFFF;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #FF6200;
-        }
-
-        .hamburger {
             display: none;
             flex-direction: column;
-            cursor: pointer;
-        }
-
-        .hamburger span {
-            background: #FFC107;
-            height: 3px;
-            width: 25px;
-            margin: 4px 0;
-            transition: all 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 60px;
-                left: 0;
-                width: 100%;
-                background: #1A1A1A;
-                padding: 20px;
-            }
-
-            .nav-menu.active {
-                display: flex;
-            }
-
-            .hamburger {
-                display: flex;
-            }
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .hero-bg {
             position: absolute;
-            top: 0;
+            top: 60px;
             left: 0;
             width: 100%;
-            height: 100%;
-            overflow: hidden;
             background: #1A1A1A;
-            /* Fallback background */
-        }
-
-        .hero-bg img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-title {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .hero-title span {
-            color: #FF6200;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: #FFFFFF;
-            max-width: 600px;
-            margin: 0 auto 30px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #FF6200, #FFC107);
-            color: #FFFFFF;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #FF6200;
-            color: #FF6200;
-        }
-
-        .btn-secondary:hover {
-            background: #FF6200;
-            color: #FFFFFF;
-            transform: translateY(-3px);
-        }
-
-        /* Services Section */
-        .services {
-            padding: 80px 20px;
-            background: #FFFFFF;
-            color: #1A1A1A;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .section-header h2 {
-            font-size: 36px;
-            font-weight: 700;
-            color: #1A1A1A;
-        }
-
-        .section-header p {
-            font-size: 16px;
-            color: #666666;
-            margin-top: 10px;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .service-card {
-            background: #F9F9F9;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .service-image img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .service-content {
             padding: 20px;
         }
 
-        .service-content h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #FF6200;
+        .nav-menu.active {
+            display: flex;
         }
 
-        .service-content p {
-            font-size: 14px;
-            color: #666666;
+        .hamburger {
+            display: flex;
         }
+    }
 
-        /* Academy Section */
-        .academy {
-            padding: 80px 20px;
-            background: #1A1A1A;
-        }
+    /* Hero Section */
+    .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
 
+    .hero-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1A1A1A;
+        /* Fallback background */
+    }
+
+    .hero-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .hero-title span {
+        color: #FF6200;
+    }
+
+    .hero-subtitle {
+        font-size: 18px;
+        color: #FFFFFF;
+        max-width: 600px;
+        margin: 0 auto 30px;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #FF6200, #FFC107);
+        color: #FFFFFF;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 2px solid #FF6200;
+        color: #FF6200;
+    }
+
+    .btn-secondary:hover {
+        background: #FF6200;
+        color: #FFFFFF;
+        transform: translateY(-3px);
+    }
+
+    /* Services Section */
+    .services {
+        padding: 80px 20px;
+        background: #FFFFFF;
+        color: #1A1A1A;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .section-header h2 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #1A1A1A;
+    }
+
+    .section-header p {
+        font-size: 16px;
+        color: #666666;
+        margin-top: 10px;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .service-card {
+        background: #F9F9F9;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .service-image img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .service-content {
+        padding: 20px;
+    }
+
+    .service-content h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: #FF6200;
+    }
+
+    .service-content p {
+        font-size: 14px;
+        color: #666666;
+    }
+
+    /* Academy Section */
+    .academy {
+        padding: 80px 20px;
+        background: #1A1A1A;
+    }
+
+    .academy-grid {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .academy-content {
+        flex: 1;
+    }
+
+    .academy-content h2 {
+        font-size: 36px;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 20px;
+    }
+
+    .academy-description {
+        font-size: 16px;
+        color: #CCCCCC;
+        margin-bottom: 20px;
+    }
+
+    .academy-features {
+        list-style: none;
+        margin-bottom: 20px;
+    }
+
+    .academy-features li {
+        font-size: 16px;
+        color: #FFFFFF;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .academy-features .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .dot.cyan {
+        background: #FF6200;
+    }
+
+    .dot.pink {
+        background: #FFC107;
+    }
+
+    .btn-pink {
+        background: #FF6200;
+        color: #FFFFFF;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+    }
+
+    .btn-pink:hover {
+        background: #FFC107;
+        transform: translateY(-3px);
+    }
+
+    .academy-image {
+        flex: 1;
+    }
+
+    .academy-image img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
         .academy-grid {
-            display: flex;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .academy-content {
-            flex: 1;
-        }
-
-        .academy-content h2 {
-            font-size: 36px;
-            font-weight: 700;
-            color: #FFFFFF;
-            margin-bottom: 20px;
-        }
-
-        .academy-description {
-            font-size: 16px;
-            color: #CCCCCC;
-            margin-bottom: 20px;
-        }
-
-        .academy-features {
-            list-style: none;
-            margin-bottom: 20px;
-        }
-
-        .academy-features li {
-            font-size: 16px;
-            color: #FFFFFF;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .academy-features .dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .dot.cyan {
-            background: #FF6200;
-        }
-
-        .dot.pink {
-            background: #FFC107;
-        }
-
-        .btn-pink {
-            background: #FF6200;
-            color: #FFFFFF;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-        }
-
-        .btn-pink:hover {
-            background: #FFC107;
-            transform: translateY(-3px);
+            flex-direction: column;
         }
 
         .academy-image {
-            flex: 1;
+            order: -1;
         }
+    }
 
-        .academy-image img {
-            width: 100%;
-            height: 400px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+    /* Studio Section */
+    .studio {
+        padding: 80px 20px;
+        background: #FFFFFF;
+        color: #1A1A1A;
+    }
 
-        @media (max-width: 768px) {
-            .academy-grid {
-                flex-direction: column;
-            }
+    .studio-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
 
-            .academy-image {
-                order: -1;
-            }
-        }
+    .studio-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
 
-        /* Studio Section */
-        .studio {
-            padding: 80px 20px;
-            background: #FFFFFF;
-            color: #1A1A1A;
-        }
+    .studio-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
 
-        .studio-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
+    .studio-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
 
-        .studio-card {
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-        }
+    .studio-card:hover .studio-overlay {
+        opacity: 1;
+    }
 
-        .studio-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
+    .studio-info {
+        text-align: center;
+        color: #FFFFFF;
+    }
 
-        .studio-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+    .studio-info h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
 
-        .studio-card:hover .studio-overlay {
-            opacity: 1;
-        }
+    .studio-info p {
+        font-size: 14px;
+    }
 
-        .studio-info {
-            text-align: center;
-            color: #FFFFFF;
-        }
+    /* Contact Section */
+    .contact {
+        padding: 80px 20px;
+        background: #1A1A1A;
+    }
 
-        .studio-info h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
+    .contact-grid {
+        display: flex;
+        gap: 40px;
+    }
 
-        .studio-info p {
-            font-size: 14px;
-        }
+    .contact-info {
+        flex: 1;
+    }
 
-        /* Contact Section */
-        .contact {
-            padding: 80px 20px;
-            background: #1A1A1A;
-        }
+    .contact-info h3 {
+        font-size: 24px;
+        color: #FFFFFF;
+        margin-bottom: 20px;
+    }
 
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        font-size: 16px;
+        color: #CCCCCC;
+    }
+
+    .contact-icon {
+        font-size: 20px;
+        margin-right: 10px;
+    }
+
+    .contact-icon.cyan {
+        color: #FF6200;
+    }
+
+    .contact-icon.pink {
+        color: #FFC107;
+    }
+
+    .contact-form {
+        flex: 1;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 2px solid #e5e5e5;
+        border-radius: 8px;
+        font-size: 16px;
+        background: #F9F9F9;
+        color: #1A1A1A;
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+        outline: none;
+        border-color: #FF6200;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #FF6200, #FFC107);
+        color: #FFFFFF;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
         .contact-grid {
-            display: flex;
-            gap: 40px;
+            flex-direction: column;
         }
+    }
 
-        .contact-info {
-            flex: 1;
-        }
+    /* Footer */
+    .footer {
+        background: #1A1A1A;
+        padding: 40px 20px;
+        color: #CCCCCC;
+    }
 
-        .contact-info h3 {
-            font-size: 24px;
-            color: #FFFFFF;
-            margin-bottom: 20px;
-        }
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
 
-        .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 16px;
-            color: #CCCCCC;
-        }
+    .footer-brand h3 {
+        font-size: 24px;
+        color: #FFC107;
+    }
 
-        .contact-icon {
-            font-size: 20px;
-            margin-right: 10px;
-        }
+    .footer-brand p {
+        font-size: 14px;
+        color: #CCCCCC;
+    }
 
-        .contact-icon.cyan {
-            color: #FF6200;
-        }
+    .footer-links {
+        display: flex;
+        gap: 20px;
+    }
 
-        .contact-icon.pink {
-            color: #FFC107;
-        }
+    .footer-links a {
+        color: #FFFFFF;
+        text-decoration: none;
+        font-size: 14px;
+    }
 
-        .contact-form {
-            flex: 1;
-        }
+    .footer-links a:hover {
+        color: #FF6200;
+    }
 
-        .contact-form input,
-        .contact-form textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 16px;
-            background: #F9F9F9;
-            color: #1A1A1A;
-        }
+    .footer-bottom {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+    }
 
-        .contact-form input:focus,
-        .contact-form textarea:focus {
-            outline: none;
-            border-color: #FF6200;
-        }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, #FF6200, #FFC107);
-            color: #FFFFFF;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-        }
-
-        .btn-gradient:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
-        }
-
-        @media (max-width: 768px) {
-            .contact-grid {
-                flex-direction: column;
-            }
-        }
-
-        /* Footer */
-        .footer {
-            background: #1A1A1A;
-            padding: 40px 20px;
-            color: #CCCCCC;
-        }
-
+    @media (max-width: 768px) {
         .footer-content {
-            display: flex;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .footer-brand h3 {
-            font-size: 24px;
-            color: #FFC107;
-        }
-
-        .footer-brand p {
-            font-size: 14px;
-            color: #CCCCCC;
-        }
-
-        .footer-links {
-            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
-
-        .footer-links a {
-            color: #FFFFFF;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .footer-links a:hover {
-            color: #FF6200;
-        }
-
-        .footer-bottom {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .footer-content {
-                flex-direction: column;
-                gap: 20px;
-            }
-        }
+    }
     </style>
 </head>
 
@@ -579,7 +579,7 @@
         <div class="nav-container">
             <div class="nav-content">
                 <div class="nav-logo">
-                    <h1>TAMINO ETV</h1>
+                    <h1>TAMINO eTV</h1>
                 </div>
                 <div class="nav-menu" id="navMenu">
                     <a href="#services" class="nav-link">Services</a>
@@ -612,7 +612,7 @@
                 Amplify Your <span class="text-cyan">Voice</span>
             </h1>
             <p class="hero-subtitle">
-                Professional podcasting and media education at Tamino ETV
+                Professional podcasting and media education at Tamino eTV
             </p>
             <div class="hero-buttons">
                 <a href="#contact" class="btn btn-primary">Start Podcast</a>
@@ -674,7 +674,7 @@
         <div class="container">
             <div class="academy-grid">
                 <div class="academy-content">
-                    <h2>Tamino ETV Academy</h2>
+                    <h2>Tamino eTV Academy</h2>
                     <p class="academy-description">
                         Master the art of podcasting with our comprehensive audio production courses. Learn from
                         industry professionals and get hands-on experience with professional equipment.
@@ -757,11 +757,11 @@
                     </div>
                     <div class="contact-item">
                         <span class="contact-icon pink">📞</span>
-                        <span>+1 (555) 123-4567</span>
+                        <span>+000 000 000</span>
                     </div>
                     <div class="contact-item">
                         <span class="contact-icon cyan">📍</span>
-                        <span>123 Media Street, Production City</span>
+                        <span>Maiduguri</span>
                     </div>
                 </div>
 
@@ -780,7 +780,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <h3>TAMINO ETV</h3>
+                    <h3>TAMINO eTV</h3>
                     <p>Amplifying your voice</p>
                 </div>
                 <div class="footer-links">
@@ -790,16 +790,16 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Tamino ETV. All rights reserved.</p>
+                <p>&copy; 2025 Tamino eTV. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Hamburger menu toggle
-        document.getElementById('hamburger').addEventListener('click', () => {
-            document.getElementById('navMenu').classList.toggle('active');
-        });
+    // Hamburger menu toggle
+    document.getElementById('hamburger').addEventListener('click', () => {
+        document.getElementById('navMenu').classList.toggle('active');
+    });
     </script>
 </body>
 
