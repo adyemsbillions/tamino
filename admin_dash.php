@@ -386,39 +386,6 @@ if (!isset($_SESSION['csrf_token'])) {
         box-shadow: 0 6px 16px rgba(255, 98, 0, 0.4);
     }
 
-    .modal-content .next-btn {
-        width: 100%;
-        padding: 10px;
-        background: #28a745;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 10px;
-        transition: transform 0.2s ease, box-shadow 0.3s ease;
-    }
-
-    .modal-content .next-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(0, 128, 0, 0.4);
-    }
-
-    .modal-content .account-details {
-        margin-bottom: 15px;
-        font-size: 0.85rem;
-        color: #1A1A1A;
-        background: #F9F9F9;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #e5e5e5;
-    }
-
-    .modal-content .account-details p {
-        margin-bottom: 5px;
-    }
-
     .logout-section {
         margin-top: 25px;
         text-align: center;
@@ -490,8 +457,7 @@ if (!isset($_SESSION['csrf_token'])) {
             padding: 8px;
         }
 
-        .modal-content .submit-btn,
-        .modal-content .next-btn {
+        .modal-content .submit-btn {
             font-size: 0.85rem;
             padding: 8px;
         }
@@ -554,7 +520,7 @@ if (!isset($_SESSION['csrf_token'])) {
             <li><a href="#view-contacts">View Contacts</a></li>
             <li><a href="#manage-podcasts">Manage Podcasts</a></li>
             <li><a href="#manage-tasks">Manage Tasks</a></li>
-            <li><a href="#make-payment">Make Payment</a></li>
+            <li><a href="make_payment.php">Make Payment</a></li>
             <li><a href="#payment-history">Payment History</a></li>
         </ul>
     </div>
@@ -566,11 +532,6 @@ if (!isset($_SESSION['csrf_token'])) {
             <div class="dashboard-header">
                 <h1>Welcome, <?php echo htmlspecialchars($admin_name); ?>!</h1>
                 <p>Manage staff, hosts, contacts, podcasts, tasks, and payments</p>
-            </div>
-            <!-- Make Payment -->
-            <div class="admin-section" id="make-payment">
-                <h3>Make Payment</h3>
-                <button class="add-btn" id="makePaymentBtn">Make New Payment</button>
             </div>
             <!-- Payment History -->
             <div class="admin-section" id="payment-history">
@@ -833,50 +794,6 @@ if (!isset($_SESSION['csrf_token'])) {
             <p id="contact_date"></p>
         </div>
     </div>
-    <!-- Make Payment Modal -->
-    <div class="modal" id="paymentModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closePaymentModal">&times;</span>
-            <h2>Make Payment</h2>
-            <form id="paymentForm" action="make_payment.php" method="POST">
-                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                <div class="form-group">
-                    <label for="payment_type">Payment Type</label>
-                    <select id="payment_type" name="payment_type" required>
-                        <option value="">Select Payment Type</option>
-                        <option value="Logistics">Logistics</option>
-                        <option value="Salary">Salary</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="amount">Amount</label>
-                    <input type="number" id="amount" name="amount" step="0.01" min="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="staff_id">Select Staff</label>
-                    <select id="staff_id" name="staff_id" required>
-                        <option value="">Select Staff</option>
-                        <?php foreach ($staff_list as $staff): ?>
-                        <option value="<?php echo htmlspecialchars($staff['id']); ?>"
-                            data-account-name="<?php echo htmlspecialchars($staff['account_name'] ?? 'N/A'); ?>"
-                            data-bank-name="<?php echo htmlspecialchars($staff['bank_name'] ?? 'N/A'); ?>"
-                            data-account-number="<?php echo htmlspecialchars($staff['account_number'] ?? 'N/A'); ?>">
-                            <?php echo htmlspecialchars($staff['name']); ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="account-details" id="accountDetails" style="display: none;">
-                    <p id="accountName"></p>
-                    <p id="bankName"></p>
-                    <p id="accountNumber"></p>
-                </div>
-                <button type="button" class="next-btn" id="nextBtn" style="display: none;">Next</button>
-                <button type="submit" class="submit-btn" id="payBtn" style="display: none;">Pay</button>
-            </form>
-        </div>
-    </div>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         console.log('DOM fully loaded');
@@ -905,11 +822,9 @@ if (!isset($_SESSION['csrf_token'])) {
         const staffModal = document.getElementById('staffModal');
         const hostModal = document.getElementById('hostModal');
         const contactModal = document.getElementById('contactModal');
-        const paymentModal = document.getElementById('paymentModal');
         const closeStaffModal = document.getElementById('closeStaffModal');
         const closeHostModal = document.getElementById('closeHostModal');
         const closeContactModal = document.getElementById('closeContactModal');
-        const closePaymentModal = document.getElementById('closePaymentModal');
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -920,12 +835,10 @@ if (!isset($_SESSION['csrf_token'])) {
         closeStaffModal.addEventListener('click', () => closeModal('staffModal'));
         closeHostModal.addEventListener('click', () => closeModal('hostModal'));
         closeContactModal.addEventListener('click', () => closeModal('contactModal'));
-        closePaymentModal.addEventListener('click', () => closeModal('paymentModal'));
         window.addEventListener('click', (e) => {
             if (e.target === staffModal) closeModal('staffModal');
             if (e.target === hostModal) closeModal('hostModal');
             if (e.target === contactModal) closeModal('contactModal');
-            if (e.target === paymentModal) closeModal('paymentModal');
         });
 
         // Add Staff
@@ -1101,111 +1014,6 @@ if (!isset($_SESSION['csrf_token'])) {
                     form.submit();
                 }
             });
-        });
-
-        // Make Payment
-        document.getElementById('makePaymentBtn').addEventListener('click', () => {
-            const paymentForm = document.getElementById('paymentForm');
-            paymentForm.reset();
-            document.getElementById('payment_type').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('staff_id').value = '';
-            document.getElementById('accountDetails').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('payBtn').style.display = 'none';
-            paymentModal.style.display = 'flex';
-            console.log('Payment modal opened, form reset');
-            // Trigger change event manually
-            const staffSelect = document.getElementById('staff_id');
-            staffSelect.dispatchEvent(new Event('change'));
-        });
-
-        // Show Next Button on Staff Selection
-        document.getElementById('staff_id').addEventListener('change', () => {
-            const staffSelect = document.getElementById('staff_id');
-            const nextBtn = document.getElementById('nextBtn');
-            const payBtn = document.getElementById('payBtn');
-            const accountDetails = document.getElementById('accountDetails');
-            console.log('staff_id change event triggered, value:', staffSelect ? staffSelect.value :
-                'staffSelect not found');
-            console.log('nextBtn element:', nextBtn);
-            if (!staffSelect || !nextBtn) {
-                console.error('Error: staffSelect or nextBtn not found in DOM');
-                return;
-            }
-            if (staffSelect.value !== '') {
-                console.log('Staff selected, showing Next button');
-                nextBtn.style.display = 'block';
-                payBtn.style.display = 'none';
-                accountDetails.style.display = 'none';
-            } else {
-                console.log('No staff selected, hiding Next and Pay buttons');
-                nextBtn.style.display = 'none';
-                payBtn.style.display = 'none';
-                accountDetails.style.display = 'none';
-            }
-        });
-
-        // Display Account Details and Pay Button on Next Button Click
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            const staffSelect = document.getElementById('staff_id');
-            const staffId = staffSelect.value;
-            const selectedOption = staffSelect.options[staffSelect.selectedIndex];
-            const accountDetails = document.getElementById('accountDetails');
-            const accountName = document.getElementById('accountName');
-            const bankName = document.getElementById('bankName');
-            const accountNumber = document.getElementById('accountNumber');
-            const nextBtn = document.getElementById('nextBtn');
-            const payBtn = document.getElementById('payBtn');
-            console.log('Next button clicked, Staff ID:', staffId);
-            if (staffId === '') {
-                console.log('Validation failed: No staff selected');
-                alert('Please select a staff member.');
-                return;
-            }
-            console.log('Selected staff text:', selectedOption.text);
-            console.log('Account Name:', selectedOption.getAttribute('data-account-name'));
-            console.log('Bank Name:', selectedOption.getAttribute('data-bank-name'));
-            console.log('Account Number:', selectedOption.getAttribute('data-account-number'));
-            accountName.textContent = 'Account Name: ' + (selectedOption.getAttribute(
-                'data-account-name') || 'N/A');
-            bankName.textContent = 'Bank Name: ' + (selectedOption.getAttribute('data-bank-name') ||
-                'N/A');
-            accountNumber.textContent = 'Account Number: ' + (selectedOption.getAttribute(
-                'data-account-number') || 'N/A');
-            accountDetails.style.display = 'block';
-            nextBtn.style.display = 'none';
-            payBtn.style.display = 'block';
-        });
-
-        // Validate Payment Form
-        document.getElementById('paymentForm').addEventListener('submit', (e) => {
-            const paymentType = document.getElementById('payment_type').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const staffSelect = document.getElementById('staff_id');
-            const staffId = staffSelect.value;
-            console.log('Form submitted');
-            console.log('Payment Type:', paymentType);
-            console.log('Amount:', amount, 'Type:', typeof amount);
-            console.log('Staff ID:', staffId);
-            if (!paymentType) {
-                console.log('Validation failed: Payment Type is empty');
-                e.preventDefault();
-                alert('Please select a valid payment type.');
-                return;
-            }
-            if (!amount || isNaN(amount) || amount <= 0) {
-                console.log('Validation failed: Amount is invalid', amount);
-                e.preventDefault();
-                alert('Please enter a valid amount greater than 0.');
-                return;
-            }
-            if (staffId === '') {
-                console.log('Validation failed: Staff ID is empty or invalid');
-                e.preventDefault();
-                alert('Please select a staff member.');
-                return;
-            }
         });
     });
     </script>
